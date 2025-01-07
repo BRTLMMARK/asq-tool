@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import requests
 import csv
+from mangum import Mangum
 
 app = FastAPI()
 
@@ -54,3 +55,5 @@ def analyze_asq(client_name: str):
             }
 
     return {"error": f"Client '{client_name}' not found."}
+
+handler = Mangum(app)
