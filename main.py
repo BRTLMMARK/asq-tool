@@ -1,11 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import requests
 import csv
+import json
+import random
 from mangum import Mangum
 
 app = FastAPI()
 
 ASQ_URL = "https://docs.google.com/spreadsheets/d/1TiU8sv5cJg30ZL3fqPSmBwJJbB7h2xv1NNbKo4ZIydU/export?format=csv"
+
+# Load phrases for ASQ
+with open("phrases_asq.json", "r") as f:
+    phrases = json.load(f)
 
 @app.get("/analyze")
 def analyze_asq(client_name: str):
@@ -14,7 +20,7 @@ def analyze_asq(client_name: str):
     data = response.text.splitlines()
 
     reader = csv.reader(data)
-    header = next(reader)  # Skip header row
+    header = next(reader)
 
     for row in reader:
         name = row[-1].strip()
@@ -28,19 +34,16 @@ def analyze_asq(client_name: str):
 
             if "None of the above" in selected_options:
                 interpretation = "No Risk"
-                primary_impression = "The client has no risk of suicidal thoughts or behaviors."
+                primary_impression = random.choice(phrases["No Risk"])
                 additional_impressions = []
-                suggested_tools = []
             elif "Yes" in acuity_response:
                 interpretation = "Acute Positive Screen"
-                primary_impression = "The client is at imminent risk of suicide and requires immediate safety and mental health evaluation."
-                additional_impressions = ["The client requires a STAT safety/full mental health evaluation."]
-                suggested_tools = ["Tools for Suicide", "Immediate Mental Health Safety Plan"]
+                primary_impression = random.choice(phrases["Acute Positive Screen"])
+                additional_impressions = [random.choice(phrases["Acute Positive Screen"])]
             else:
                 interpretation = "Non-Acute Positive Screen"
-                primary_impression = "The client is at potential risk of suicide and requires a brief suicide safety assessment."
-                additional_impressions = ["The client requires a brief suicide safety assessment."]
-                suggested_tools = ["Tools for Suicide", "Suicide Risk Assessment Tools"]
+                primary_impression = random.choice(phrases["Non-Acute Positive Screen"])
+                additional_impressions = [random.choice(phrases["Non-Acute Positive Screen"])]
 
             return {
                 "client_name": client_name,
@@ -50,10 +53,9 @@ def analyze_asq(client_name: str):
                 "acuity_response": acuity_response,
                 "interpretation": interpretation,
                 "primary_impression": primary_impression,
-                "additional_impressions": additional_impressions,
-                "suggested_tools": suggested_tools,
+                "additional_impressions": additional_impressions
             }
 
-    return {"error": f"Client '{client_name}' not found."}
+    raise HTTPException(status_code=404, detail=f"Client '{client_name}' not found.")
 
 handler = Mangum(app)
