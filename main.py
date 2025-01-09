@@ -1,8 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import requests
 import csv
-import json
-import random
 from mangum import Mangum
 
 app = FastAPI()
@@ -33,10 +31,14 @@ def analyze_asq(client_name: str):
             selected_options = [option.strip() for option in selected_options_raw.split(",")]
 
             if "None of the above" in selected_options:
-                interpretation = "No Risk"
-                primary_impression = random.choice(phrases["No Risk"])
-                additional_impressions = []
-            elif "Yes" in acuity_response:
+                return {
+                    "client_name": client_name,
+                    "selected_options": selected_options,
+                    "interpretation": "No Risk",
+                    "message": "The client has no risk of suicidal thoughts or behaviors."
+                }
+
+            if "Yes" in acuity_response:
                 interpretation = "Acute Positive Screen"
                 primary_impression = random.choice(phrases["Acute Positive Screen"])
                 additional_impressions = [random.choice(phrases["Acute Positive Screen"])]
