@@ -38,14 +38,12 @@ def analyze_asq(first_name: str, last_name: str, middle_name: str = "", suffix: 
         reader = csv.reader(data)
         header = next(reader)
 
-        # Normalize input for comparison
-        input_name = f"{first_name} {middle_name} {last_name} {suffix}".strip().lower()
+        input_name = f"{first_name} {middle_name} {last_name} {suffix}".strip()
 
         for row in reader:
-            # Extract and normalize name from the CSV
-            row_name = f"{row[-4]} {row[-3]} {row[-2]} {row[-1]}".strip().lower()
+            row_name = f"{row[-4]} {row[-3]} {row[-2]} {row[-1]}".strip()
 
-            if row_name == input_name:
+            if row_name.lower() == input_name.lower():
                 selected_options_raw = row[2].strip()
                 how_and_when = row[3].strip()
                 please_describe = row[6].strip()
@@ -53,29 +51,23 @@ def analyze_asq(first_name: str, last_name: str, middle_name: str = "", suffix: 
 
                 selected_options = [option.strip() for option in selected_options_raw.split(",")]
 
-                if "None of the above" in selected_options:
-                    return {
-                        "client_name": input_name.title(),
-                        "selected_options": selected_options,
-                        "interpretation": "No Risk",
-                        "message": "The client has no risk of suicidal thoughts or behaviors."
-                    }
+                interpretation = "Acute Positive Screen" if "Yes" in acuity_response else "Non-Acute Positive Screen"
+                primary_impression = (
+                    "The responses indicate a critical need for immediate intervention."
+                    if interpretation == "Acute Positive Screen"
+                    else "Responses suggest no immediate risk but monitoring is required."
+                )
 
-                if "Yes" in acuity_response:
-                    interpretation = "Acute Positive Screen"
-                    primary_impression = random.choice(phrases["Acute Positive Screen"])
-                    additional_impressions = [random.choice(phrases["Acute Positive Screen"])]
-                else:
-                    interpretation = "Non-Acute Positive Screen"
-                    primary_impression = random.choice(phrases["Non-Acute Positive Screen"])
-                    additional_impressions = [random.choice(phrases["Non-Acute Positive Screen"])]
+                additional_impressions = [
+                    "An acute positive screen was detected, requiring urgent intervention."
+                ] if interpretation == "Acute Positive Screen" else []
 
                 return {
                     "client_name": input_name.title(),
                     "selected_options": selected_options,
-                    "how_and_when": how_and_when if how_and_when else "No response provided.",
-                    "please_describe": please_describe if please_describe else "No response provided.",
-                    "acuity_response": acuity_response,
+                    "how_and_when": how_and_when or "N/A",
+                    "please_describe": please_describe or "N/A",
+                    "acuity_response": acuity_response or "N/A",
                     "interpretation": interpretation,
                     "primary_impression": primary_impression,
                     "additional_impressions": additional_impressions
