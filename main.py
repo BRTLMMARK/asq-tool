@@ -12,6 +12,9 @@ ASQ_URL = "https://docs.google.com/spreadsheets/d/1TiU8sv5cJg30ZL3fqPSmBwJJbB7h2
 # Load phrases for ASQ
 with open("phrases_asq.json", "r") as f:
     phrases = json.load(f)
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "PHQ-9 Tool API is running and accessible."}
 
 @app.get("/analyze")
 def analyze_asq(client_name: str):
