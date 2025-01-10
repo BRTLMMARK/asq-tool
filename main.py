@@ -1,20 +1,32 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 import csv
 import json
 import random
 from mangum import Mangum
 
+# Initialize FastAPI app
 app = FastAPI()
+
+# Add CORS middleware to allow cross-origin requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (use specific domains in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all HTTP headers
+)
 
 ASQ_URL = "https://docs.google.com/spreadsheets/d/1TiU8sv5cJg30ZL3fqPSmBwJJbB7h2xv1NNbKo4ZIydU/export?format=csv"
 
 # Load phrases for ASQ
 with open("phrases_asq.json", "r") as f:
     phrases = json.load(f)
+
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
-    return {"status": "ok", "message": "PHQ-9 Tool API is running and accessible."}
+    return {"status": "ok", "message": "ASQ Tool API is running and accessible."}
 
 @app.get("/analyze")
 def analyze_asq(client_name: str):
