@@ -51,16 +51,21 @@ def analyze_asq(first_name: str, last_name: str, middle_name: str = "", suffix: 
 
                 selected_options = [option.strip() for option in selected_options_raw.split(",")]
 
-                interpretation = "Acute Positive Screen" if "Yes" in acuity_response else "Non-Acute Positive Screen"
-                primary_impression = (
-                    "The responses indicate a critical need for immediate intervention."
-                    if interpretation == "Acute Positive Screen"
-                    else "Responses suggest no immediate risk but monitoring is required."
-                )
-
-                additional_impressions = [
-                    "An acute positive screen was detected, requiring urgent intervention."
-                ] if interpretation == "Acute Positive Screen" else []
+                if "None of the above" in selected_options:
+                    interpretation = "No Risk"
+                    primary_impression = "The client has no risk of suicidal thoughts or behaviors."
+                    additional_impressions = []
+                    suggested_tools = []
+                elif "Yes" in acuity_response:
+                    interpretation = "Acute Positive Screen"
+                    primary_impression = "The client is at imminent risk of suicide and requires immediate safety and mental health evaluation."
+                    additional_impressions = ["The client requires a STAT safety/full mental health evaluation."]
+                    suggested_tools = ["Tools for Suicide", "Immediate Mental Health Safety Plan"]
+                else:
+                    interpretation = "Non-Acute Positive Screen"
+                    primary_impression = "The client is at potential risk of suicide and requires a brief suicide safety assessment."
+                    additional_impressions = ["The client requires a brief suicide safety assessment."]
+                    suggested_tools = ["Tools for Suicide", "Suicide Risk Assessment Tools"]
 
                 return {
                     "client_name": input_name.title(),
@@ -70,7 +75,8 @@ def analyze_asq(first_name: str, last_name: str, middle_name: str = "", suffix: 
                     "acuity_response": acuity_response or "N/A",
                     "interpretation": interpretation,
                     "primary_impression": primary_impression,
-                    "additional_impressions": additional_impressions
+                    "additional_impressions": additional_impressions,
+                    "suggested_tools": suggested_tools
                 }
 
         raise HTTPException(status_code=404, detail=f"Client '{input_name}' not found.")
